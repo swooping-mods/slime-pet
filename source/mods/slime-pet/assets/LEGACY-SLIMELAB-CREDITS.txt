@@ -1,0 +1,17 @@
+SlimeLab: Full-Color 3D Slime Asset Bundle, Basic pack and free textures
+Author: Zero (fran-zerogame)
+Source: https://fran-zerogame.itch.io/slimelab-full-color-3d-slime-asset-bundle
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+
+Modifications for Moon Sweepers Slime Pet: normalized axes/metric scale and ground
+origin; subdivision and skin baked to sampled mesh poses; compact quantization;
+Blender inverted outline removed; material adaptation; original transparent face
+card identified for runtime replacement; animated face attachment anchors added.
+Source author does not endorse this mod. This attribution must accompany copies
+of the derived mesh/animation data and retained free Green body textures.
+
+Original texture names: GreenSlimeColor.png, GreenSlimeEmision.png.
+The Basic .blend does not include its referenced body/eye texture files. The
+supplementary Green textures are optional; the embedded C defaults use explicit
+colors. The original face-card texture was unavailable and is not reconstructed.

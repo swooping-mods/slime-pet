@@ -1,0 +1,12 @@
+{
+  "cues": [
+    {
+      "id": "springy_hop",
+      "wav": "hop.wav"
+    },
+    {
+      "id": "springy_land",
+      "wav": "land.wav"
+    }
+  ]
+}

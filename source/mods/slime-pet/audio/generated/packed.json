@@ -1,0 +1,21 @@
+{
+  "schema": "moon-sound-assets/v1",
+  "cues": [
+    {
+      "id": "springy_hop",
+      "wav": "hop.wav",
+      "samples": 23520,
+      "rate": 48000,
+      "sha256": "d6ae7f346f7a8440c1d7b8767a7e0347a9d5df4939fc1caede08f1ca50d43b74"
+    },
+    {
+      "id": "springy_land",
+      "wav": "land.wav",
+      "samples": 35520,
+      "rate": 48000,
+      "sha256": "297bdfdb708d8929919611f0c8c2578985dde4377b33c76e01ca38b2c41752fb"
+    }
+  ],
+  "total_samples": 59040,
+  "header_sha256": "12260a6504e6da57ddf10d5522c416e98811201f8db487e49750b46b5c21fef8"
+}

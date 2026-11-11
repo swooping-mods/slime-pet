@@ -1,0 +1,28 @@
+{
+  "cues": [
+    {
+      "id": "hop",
+      "wav": "hop.wav"
+    },
+    {
+      "id": "land",
+      "wav": "land.wav"
+    },
+    {
+      "id": "adopt",
+      "wav": "adopt.wav"
+    },
+    {
+      "id": "pickup",
+      "wav": "pickup.wav"
+    },
+    {
+      "id": "drop",
+      "wav": "drop.wav"
+    },
+    {
+      "id": "sleep",
+      "wav": "sleep.wav"
+    }
+  ]
+}

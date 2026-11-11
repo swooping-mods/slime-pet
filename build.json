@@ -1,0 +1,6 @@
+{
+  "schema": "moon-independent-build-spec/v1",
+  "id": "slime-pet",
+  "kind": "native",
+  "entry": "mods/slime-pet/mod.c"
+}

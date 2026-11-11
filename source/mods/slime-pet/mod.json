@@ -1,0 +1,46 @@
+{
+  "id": "slime-pet",
+  "kind": "native",
+  "version": "0.5.0",
+  "feature_dependencies": [
+    "sound-framework",
+    "unit-runtime",
+    "pickup-hands",
+    "hints-framework"
+  ],
+  "gameplay": true,
+  "hotkey": "F6",
+  "display_name": "Slime Pet",
+  "play_help": [
+    "Slime Pet 0.5.0 \u2014 Aim at BUY to adopt, or at your nearby slime to pick it up; E again sets it down. Exclusive interactions and native control hints. F6 recalls.",
+    "Start Game > Slot 1 > Invite Only > Play. The starter/North room contains blue and gold terminals.",
+    "Exit normally to restore the private profile. Use --keep-world/--use-world for disposable save/reload checks."
+  ],
+  "requires_apis": [
+    {
+      "api": "sound-framework.sound",
+      "abi": 1,
+      "min_size": 48
+    },
+    {
+      "api": "unit-runtime.units",
+      "abi": 1,
+      "min_size": 80
+    },
+    {
+      "api": "unit-runtime.contacts",
+      "abi": 1,
+      "min_size": 16
+    },
+    {
+      "api": "pickup-hands.hands",
+      "abi": 1,
+      "min_size": 32
+    },
+    {
+      "api": "hints-framework.hints",
+      "abi": 1,
+      "min_size": 24
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "slime_pickup",
+  "title": "Slime pickup",
+  "group": "Moon Sweepers",
+  "model": "bubbles",
+  "duration": 0.48,
+  "seed": 414,
+  "description": "Soft gel-body vocalization for pickup",
+  "assumptions": "Fictional reduced bubble resonator. No recorded samples.",
+  "parameters": {
+    "radius_mm": 5.8,
+    "events_hz": 6,
+    "spread": 0.14,
+    "depth_m": 0,
+    "gain": 1.2
+  },
+  "timeline": {},
+  "loop": false,
+  "game_controls": [
+    "event strength \u2192 gain",
+    "variant \u2192 pitch"
+  ],
+  "question": "Soft cute gel cue"
+}

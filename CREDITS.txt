@@ -1,0 +1,15 @@
+Small Loop Works: mod and shared adapter code.
+Moon Sweepers: DragDrop Games.
+
+Original jelly model, adaptations and sound effects: Small Loop Works.
+
+Space Station Kit 1.0 computer terminal: Kenney
+https://kenney.nl/assets/space-station-kit
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+Modified terminal geometry, materials, specimen tube, controls and labels.
+
+Retained SlimeLab-derived source/data: Zero (fran-zerogame)
+https://fran-zerogame.itch.io/slimelab-full-color-3d-slime-asset-bundle
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Changes: mesh/animation conversion, coordinate normalization and materials.
+The original asset authors do not endorse this mod.

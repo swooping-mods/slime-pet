@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "slime_sleep",
+  "title": "Slime sleep",
+  "group": "Moon Sweepers",
+  "model": "bubbles",
+  "duration": 0.75,
+  "seed": 416,
+  "description": "Soft gel-body vocalization for sleep",
+  "assumptions": "Fictional reduced bubble resonator. No recorded samples.",
+  "parameters": {
+    "radius_mm": 11.5,
+    "events_hz": 3,
+    "spread": 0.14,
+    "depth_m": 0,
+    "gain": 1.2
+  },
+  "timeline": {},
+  "loop": false,
+  "game_controls": [
+    "event strength \u2192 gain",
+    "variant \u2192 pitch"
+  ],
+  "question": "Soft cute gel cue"
+}

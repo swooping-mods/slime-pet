@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "slime_drop",
+  "title": "Slime drop",
+  "group": "Moon Sweepers",
+  "model": "bubbles",
+  "duration": 0.32,
+  "seed": 415,
+  "description": "Soft gel-body vocalization for drop",
+  "assumptions": "Fictional reduced bubble resonator. No recorded samples.",
+  "parameters": {
+    "radius_mm": 9.5,
+    "events_hz": 2,
+    "spread": 0.14,
+    "depth_m": 0,
+    "gain": 1.2
+  },
+  "timeline": {},
+  "loop": false,
+  "game_controls": [
+    "event strength \u2192 gain",
+    "variant \u2192 pitch"
+  ],
+  "question": "Soft cute gel cue"
+}
