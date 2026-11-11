@@ -1,5 +1,7 @@
 # Slime Pet
 
+<img src="media/icon.png" alt="Slime Pet icon" width="128" height="128">
+
 Slime companion with hops, pickup cuddles and soft positional sounds.
 
 ## Install
