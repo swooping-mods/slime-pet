@@ -6,7 +6,9 @@ Slime companion with hops, pickup cuddles and soft positional sounds.
 
 Install [Moon Sweepers Mod Loader](https://github.com/swooping-mods/moon-sweepers-mod-loader) first.
 
-Download [slime-pet-0.5.0.msmod](content/slime-pet-0.5.0.msmod), import it with **Install mod package**, then select the mod and its required frameworks.
+Download [slime-pet-0.5.0.msmod](content/slime-pet-0.5.0.msmod), then drag and drop the `.msmod` file onto the [Moon Sweepers Mod Loader](https://github.com/swooping-mods/moon-sweepers-mod-loader) window. You can also use **Add mods…** (older loader builds: **Install mod package**).
+
+Select the mod and its required frameworks, click **Prepare files**, then **Launch**.
 
 Required mods: [sound-framework](https://github.com/swooping-mods/sound-framework), [unit-runtime](https://github.com/swooping-mods/unit-runtime), [pickup-hands](https://github.com/swooping-mods/pickup-hands), [hints-framework](https://github.com/swooping-mods/hints-framework).
 
