@@ -13,6 +13,7 @@ static SPResult sp_execute(PTR world,SPId owner,PTR player_name,const SPCommand 
         if(slot<SP_PLAYERS)sm_publish_pet(slot,&sp_core.players[slot]);sp_event("debit-failed");return failure;
     }
     su_copy(&sp_core,&pending,sizeof(sp_core));
+    if(r.code==SP_OK&&!r.duplicate&&slot<SP_PLAYERS)sp_presentation_reset(slot);
     if(command->kind==SP_PURCHASE&&r.code==SP_OK)sp_empty_mask|=1u<<command->station;
     sm_save();if(r.code==SP_OK&&r.debit){call(sw.request_save,world,0,&ok);}
     return r;

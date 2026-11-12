@@ -19,6 +19,8 @@ static const MoonHints *sp_hints;
 #include "input.h"
 #include "pet_store.h"
 #include "visual.h"
+#include "presentation.h"
+#include "observe.h"
 #include "sound.h"
 #include "sound_events.h"
 #include "../pickup-hands/sdk/client.h"
@@ -32,7 +34,7 @@ static const MoonUnitContacts *sp_contacts;
 #include "unit_world.h"
 static PTR sp_log,sp_frame,sp_focus,sp_real_delta;
 static SURoot sp_view_camera;
-static int sp_ticks,sp_thread,sp_ready_frames,sp_world_ready,sp_failed;
+static int sp_ticks,sp_thread,sp_ready_frames,sp_world_ready,sp_failed,sp_observe;
 static SPCore sp_core;
 static SVPet sp_visuals[SP_PLAYERS];
 static SVShop sp_shops[SP_STATIONS];
@@ -175,15 +177,36 @@ static void sp_world_begin(PTR world){
     if(!sv_materials()){sp_event("material-create-failed");sp_failed=1;return;}sp_world_ready=1;if(!sa_begin())sp_event("click-audio-unavailable");sm_begin(text);sp_event("world-ready");sp_shops_update(world);if(sp_test_tools){sp_material_probes();sp_winding_probes();}
 }
 static void sp_jump_sample(SVPet *v){
-    /* Test-only readback from Unity's uploaded mesh, not the source pose table. */
+    /* Opt-in readback from Unity's uploaded mesh, not the source pose table. */
     int ok=1;PTR value=call(su_method("UnityEngine","Mesh","get_vertices",""),su_get(v->body.mesh),0,&ok);
     if(!ok||!value)return;SURoot root=su_hold(value);U64 count=su.array_length(su_get(root));
     if(count&&count<=SP_JELLY_VERTICES){
-        SPVec3 *vertices=su.array_address(su_get(root),sizeof(SPVec3),0);float bottom=vertices[0].y;
+        SPVec3 *vertices=su.array_address(su_get(root),sizeof(SPVec3),0);if(!vertices){su_drop(&root);return;}float bottom=vertices[0].y;
         for(U64 i=1;i<count;i++)if(vertices[i].y<bottom)bottom=vertices[i].y;
-        char b[256],*p=cat(b,"{\"event\":\"jump-pose\",\"clip\":");p=num(p,v->last_clip);p=cat(p,",\"frame\":");p=num(p,v->last_frame);p=cat(p,",\"bottom\":");p=sp_fixed(p,bottom);p=cat(p,"}\n");DWORD written=0;WriteFile(sp_log,b,(DWORD)(p-b),&written,0);
+        char b[320],*p=cat(b,"{\"event\":\"jump-pose\",\"clip\":");p=num(p,v->last_clip);p=cat(p,",\"frame\":");p=num(p,v->last_frame);p=cat(p,",\"bottom\":");p=sp_fixed(p,bottom);
+        p=cat(p,",\"update\":");p=num(p,(unsigned)sp_ticks);p=cat(p,",\"tick\":");p=num(p,sp_core.tick);p=cat(p,",\"cycle\":");p=num(p,v->animation_cycle);
+        p=cat(p,"}\n");DWORD written=0;WriteFile(sp_log,b,(DWORD)(p-b),&written,0);
     }
     su_drop(&root);
+}
+static void sp_presentation_sample(const SPPet *pet,const SVPet *v,float dt,unsigned pose_mode){
+    /* Read the scene transform after its setter, rather than reporting only the
+     * filter's proposed pose. This observer never sets input, poses or physics. */
+    int ok=1;int frame=integer(sp_frame,0,&ok);if(!ok||frame<0)return;
+    PTR value=call(su.tr_get_position,su_get(v->transform),0,&ok);
+    if(!ok||!value){sp_event("pet-observe-read-failed");return;}
+    SPVec3 actual;su_copy(&actual,unbox(value),sizeof(actual));
+    if(!sp_finite(actual.x)||!sp_finite(actual.y)||!sp_finite(actual.z)){sp_event("pet-observe-read-failed");return;}
+    char b[1400],*p=cat(b,"{\"event\":\"pet-presentation\",\"frame\":");p=num(p,(unsigned)frame);
+    p=cat(p,",\"update\":");p=num(p,(unsigned)sp_ticks);p=cat(p,",\"tick\":");p=num(p,sp_core.tick);
+    p=cat(p,",\"world\":");p=num(p,sp_core.world_id);p=cat(p,",\"dt\":");p=sp_fixed(p,dt);
+    p=cat(p,",\"mode\":");p=num(p,pet->mode);p=cat(p,",\"pose_mode\":");p=num(p,pose_mode);
+    p=cat(p,",\"clip\":");p=num(p,v->last_clip);p=cat(p,",\"clip_frame\":");p=num(p,v->last_frame);p=cat(p,",\"cycle\":");p=num(p,v->animation_cycle);
+    p=cat(p,",\"filter\":");p=num(p,v->motion_kind);p=cat(p,",\"reset\":");p=num(p,v->motion_reset_reason);
+    p=cat(p,",\"center\":");p=sp_vector_text(p,pet->position);p=cat(p,",\"foot\":");p=sp_vector_text(p,su_sub(pet->position,su_mul(pet->up,SP_HALF_HEIGHT)));
+    p=cat(p,",\"up\":");p=sp_vector_text(p,pet->up);p=cat(p,",\"target\":");p=sp_vector_text(p,svp_vector(v->motion.target.position));
+    p=cat(p,",\"filtered\":");p=sp_vector_text(p,svp_vector(v->motion.pose.position));p=cat(p,",\"actual\":");p=sp_vector_text(p,actual);
+    p=cat(p,"}\n");DWORD written=0;WriteFile(sp_log,b,(DWORD)(p-b),&written,0);
 }
 static void sp_visuals_update(float dt){
     for(unsigned i=0;i<SP_PLAYERS;i++){
@@ -192,7 +215,7 @@ static void sp_visuals_update(float dt){
         if(!pet->active){if(v->made){sp_sound_emit(SP_AUDIO_DESPAWN,pet);sv_pet_drop(v);}sp_sound_states[i].active=0;continue;}
         if(v->made&&v->variant!=pet->variant){sv_pet_drop(v);sp_sound_states[i].active=0;}
         if(!v->made&&!sv_pet_make(v,0,pet->variant,1)){sp_event("pet-create-failed");sp_failed=1;return;}
-        su_set_vector(su.tr_position,su_get(v->transform),su_sub(pet->position,su_mul(pet->up,SP_HALF_HEIGHT)));
+        SPVec3 visual_foot=su_sub(pet->position,su_mul(pet->up,SP_HALF_HEIGHT));
         SPGround floor;SPVec3 visual_up=pet->up;
         if(pet->mode!=SP_HELD&&sw_ground(&sw,su_add(pet->position,su_mul(pet->up,.1f)),pet->up,.6f,&floor)&&su_dot(floor.normal,pet->up)>=SP_SLOPE_COS)visual_up=su_normal(floor.normal);
         SPVec3 visual_heading=su_normal(su_sub(pet->heading,su_mul(visual_up,su_dot(pet->heading,visual_up))));
@@ -203,7 +226,7 @@ static void sp_visuals_update(float dt){
             SPVec3 held=su_add(eye,su_add(su_mul(forward,1.05f),su_mul(up,-.36f)));
             SPVec3 visual_center=su_add(held,su_mul(up,SP_HALF_HEIGHT));
             local_held=sw_clear(&sw,pet->position,visual_center,pet->up,SP_RADIUS,SP_HEIGHT,0);
-            if(local_held){su_set_vector(su.tr_position,su_get(v->transform),held);
+            if(local_held){visual_foot=held;
             /* Tilt the face toward the owner's eyes, softly cradled below the
              * crosshair. The shared world pose still belongs to host policy. */
             visual_heading=su_normal(su_sub(eye,su_add(held,su_mul(up,.18f))));visual_up=up;
@@ -211,15 +234,24 @@ static void sp_visuals_update(float dt){
         }
         su_set_vector(su.tr_scale,su_get(v->transform),local_held?su_v(.72f,.72f,.72f):su_v(1,1,1));
         sv_cradle(v,local_held);
-        su_set_quat(su.tr_rotation,su_get(v->transform),su_rotation(visual_heading,visual_up));sv_pet_pose(v,pet->mode,pet->blink,pet->emotion,dt);sp_sound_visual(i,pet,v);
-        if(sp_test_tools&&sp_ticks%6==0&&pet->mode==SP_FOLLOW&&sp_id_eq(pet->id,sp_local))sp_jump_sample(v);
+        float visual_speed=svp_apply(v,visual_foot,su_rotation(visual_heading,visual_up),pet->up,dt,pet->mode==SP_HELD);
+        /* Finish easing travel before choosing a stationary clip. Fixed-step
+         * IDLE/FOLLOW jitter must not restart the hop while the pet still moves. */
+        unsigned pose_mode=pet->mode==SP_IDLE&&visual_speed>.1f?SP_FOLLOW:pet->mode;
+        sv_pet_pose(v,pose_mode,pet->blink,pet->emotion,dt);sp_sound_visual(i,pet,v);
+        if(sp_id_eq(pet->id,sp_local)){
+            if(sp_observe)sp_presentation_sample(pet,v,dt,pose_mode);
+            if(spo_jump_sample((unsigned)sp_observe,(unsigned)sp_test_tools,(unsigned)sp_ticks,v->last_clip,spa_clip(&sp_slime_asset,SP_FOLLOW)))sp_jump_sample(v);
+        }
     }
     for(unsigned i=0;i<SP_STATIONS;i++)sv_shop_tick(&sp_shops[i],dt);
 }
 static void sp_interaction_show(void *context,const char *message){sv_label_text(context,message);}
+static void sp_presentation_reset(unsigned slot){if(slot<SP_PLAYERS){sp_visuals[slot].motion.valid=0;sp_visuals[slot].motion_reset_pending=SVP_RESET_COMMAND;}}
 static void sp_feedback(unsigned kind,unsigned station,SPResult r){
     if(r.code==SP_OK&&(kind==SP_PURCHASE||kind==SP_SUMMON)){
         unsigned cue=kind==SP_PURCHASE?SP_AUDIO_ADOPT:SP_AUDIO_RECALL;SPPet *pet=sp_player(&sp_core,sp_local);
+        if(pet)sp_presentation_reset((unsigned)(pet-sp_core.players));
         if(!sm_host()&&(!pet||!pet->active||pet->variant!=r.variant)){sp_deferred_cue=cue;sp_deferred_variant=r.variant;sp_deferred_age=0;}
         else sp_sound_emit(cue,pet);
     }
@@ -394,6 +426,8 @@ __declspec(dllexport) int MoonLab_ModStart(PTR domain,PTR game){
     sp_event(sp_contacts?"shared-contacts-ready":"shared-contacts-fallback");
     char test[8];DWORD test_n=GetEnvironmentVariableA("MOONLAB_TEST_TOOLS",test,sizeof(test));sp_test_tools=test_n==1&&test[0]=='1';
     test_n=GetEnvironmentVariableA("MOONLAB_SLIME_TEST_TOOLS",test,sizeof(test));if(test_n)sp_test_tools=test_n==1&&test[0]=='1';
+    test_n=GetEnvironmentVariableA("MOONLAB_SLIME_OBSERVE",test,sizeof(test));sp_observe=spo_enabled(test,test_n);
+    if(sp_observe)sp_event("passive-observer-enabled");
     PTR user=LoadLibraryA("user32.dll");if(!user)return 0;sp_key=(short(*)(int))GetProcAddress(user,"GetAsyncKeyState");sp_foreground=(PTR(*)(void))GetProcAddress(user,"GetForegroundWindow");sp_window_pid=(DWORD(*)(PTR,DWORD *))GetProcAddress(user,"GetWindowThreadProcessId");if(!sp_key||!sp_foreground||!sp_window_pid)return 0;
     sp_frame=method("UnityEngine","Time","get_frameCount",0);sp_focus=method("UnityEngine","Application","get_isFocused",0);sp_real_delta=method("UnityEngine","Time","get_unscaledDeltaTime",0);
     if(!sp_interactions_bind(domain,game)){sp_event("interaction-framework-unavailable");return 0;}

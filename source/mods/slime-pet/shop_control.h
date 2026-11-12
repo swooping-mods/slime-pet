@@ -1,21 +1,19 @@
 #ifndef MOON_SLIME_SHOP_CONTROL_H
 #define MOON_SLIME_SHOP_CONTROL_H
+#include "../../runtime/sdk/interactible_gizmos.h"
 
 /* Engine-independent adaptation of CRS's compact momentary button. The owning
  * runtime supplies a rising-edge activation and decides authority, price and
  * purchase outcome. This policy never changes money or spawns an entity. */
-#define MS_SHOP_ENGAGE_SECONDS .065f
-#define MS_SHOP_REBOUND_SECONDS .110f
-#define MS_SHOP_PRESSED_GRACE_SECONDS .280f
+#define MS_SHOP_ENGAGE_SECONDS MOON_GIZMO_ENGAGE_SECONDS
+#define MS_SHOP_REBOUND_SECONDS MOON_GIZMO_REBOUND_SECONDS
+#define MS_SHOP_PRESSED_GRACE_SECONDS MOON_GIZMO_TARGET_GRACE_SECONDS
 #define MS_SHOP_BUTTON_TRAVEL -.035f
 #define MS_SHOP_CLICK_MAX_VOICES 6u
 #define MS_SHOP_CLICK_MAX_DISTANCE 8.0f
 #define MS_SHOP_CLICK_VOLUME_DB -5.0f
 
-typedef struct {
-    float elapsed, start_ratio, ratio, grace_remaining;
-    unsigned press_serial, active;
-} MSShopControl;
+typedef MoonGizmoMotion MSShopControl;
 
 typedef struct {
     float offset_z;
@@ -25,45 +23,13 @@ typedef struct {
 } MSShopControlPose;
 
 static inline void ms_shop_control_init(MSShopControl *control) {
-    control->elapsed = control->start_ratio = control->ratio = 0.0f;
-    control->grace_remaining = 0.0f;
-    control->press_serial = control->active = 0;
+    moon_gizmo_init(control);
 }
-
-/* Call once per actual input edge, including a rejected buy: the physical
- * button still responds and the consumer can show its rejection in the status
- * strip. Repeated presses smoothly continue from the current actuator pose. */
 static inline unsigned ms_shop_control_press(MSShopControl *control) {
-    control->start_ratio = control->ratio;
-    control->elapsed = 0.0f;
-    control->grace_remaining = MS_SHOP_PRESSED_GRACE_SECONDS;
-    control->active = 1;
-    return ++control->press_serial;
+    return moon_gizmo_press(control,moon_gizmo_default_timing());
 }
-
 static inline void ms_shop_control_step(MSShopControl *control, float dt) {
-    float t, back;
-    union { float value; unsigned bits; } finite_check;
-    finite_check.value = dt;
-    if ((finite_check.bits & 0x7f800000u) == 0x7f800000u || dt <= 0.0f) return;
-    control->grace_remaining -= dt;
-    if (control->grace_remaining < 0.0f) control->grace_remaining = 0.0f;
-    if (!control->active) return;
-    control->elapsed += dt;
-    if (control->elapsed < MS_SHOP_ENGAGE_SECONDS) {
-        t = control->elapsed/MS_SHOP_ENGAGE_SECONDS;
-        t = 1.0f-(1.0f-t)*(1.0f-t);
-        control->ratio = control->start_ratio+(1.0f-control->start_ratio)*t;
-    } else if (control->elapsed < MS_SHOP_ENGAGE_SECONDS+MS_SHOP_REBOUND_SECONDS) {
-        t = (control->elapsed-MS_SHOP_ENGAGE_SECONDS)/MS_SHOP_REBOUND_SECONDS;
-        /* Godot TRANS_BACK / EASE_OUT, followed from ratio 1 down to 0.
-         * The small outward overshoot is mechanical rebound, not a new press. */
-        back = t-1.0f;
-        control->ratio = -back*back*(2.70158f*back+1.70158f);
-    } else {
-        control->ratio = 0.0f;
-        control->active = 0;
-    }
+    moon_gizmo_step(control,moon_gizmo_default_timing(),dt);
 }
 
 /* Derive geometry, proxy and outline from the same single motion value. The

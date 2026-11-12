@@ -4,7 +4,7 @@
 #include "../unit-runtime/sdk.h"
 #define SPUR_MAX (32u + SP_PLAYERS * 48u)
 _Static_assert(SPUR_MAX <= MU_PAYLOAD_MAX,"all retained slime owners fit one shared snapshot");
-typedef struct {SPReplica previous,current;float age;unsigned valid,empty_mask;} SPUnitReplica;
+typedef struct {SPReplica current;float age;unsigned valid,empty_mask;} SPUnitReplica;
 static inline void spur_copy(void *out,const void *in,unsigned n){
     unsigned char *a=out;const unsigned char *b=in;for(unsigned i=0;i<n;i++)a[i]=b[i];
 }
@@ -43,22 +43,16 @@ static inline int spur_receive(SPUnitReplica *r,SPU64 session,const unsigned cha
     }
     SPReplica pending={0};
     if(!sp_snapshot_read(&pending,world,session,original,32+count*64))return 0;
-    r->previous=same&&r->age<=2?r->current:pending;r->current=pending;
+    r->current=pending;
     r->age=0;r->valid=1;r->empty_mask=(flags>>8)&31u;return 1;
 }
 static inline void spur_present(SPUnitReplica *r,SPReplica *out,float elapsed){
     if(!r||!out||!r->valid||!sp_finite(elapsed)||elapsed<0)return;
     r->age=elapsed>3?3:r->age+elapsed;if(r->age>3)r->age=3;*out=r->current;
     if(r->age>2){out->count=0;return;}
-    float alpha=r->age/.1f;if(alpha>1)alpha=1;
-    for(unsigned i=0;i<out->count;i++){
-        SPReplicaPet *p=&out->pets[i];if(p->mode==SP_HELD)continue;
-        for(unsigned j=0;j<r->previous.count;j++){
-            const SPReplicaPet *old=&r->previous.pets[j];
-            if(!sp_id_eq(p->id,old->id)||old->mode==SP_HELD)continue;
-            SPVec3 delta=sp_sub(p->position,old->position);if(sp_dot(delta,delta)<=16)p->position=sp_add(old->position,sp_mul(delta,alpha));break;
-        }
-    }
+    /* Keep the accepted host sample intact. The shared pet presentation filter
+     * owns per-render position/rotation for host and guest; a second interpolation
+     * here would add latency and feed a displayed pose into carry validation. */
 }
 /* Guest display slots are separate from durable host ownership. Reclaim absent
  * IDs before adding newcomers, including an unowned local player, so all 16

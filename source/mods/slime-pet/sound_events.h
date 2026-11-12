@@ -33,8 +33,7 @@ static inline void sp_sound_emit(unsigned kind,const SPPet *pet){
     sp_sound_notifying=1;sp_sound_sink(&e);sp_sound_notifying=0;
 }
 static inline void sp_sound_visual(unsigned i,const SPPet *pet,const SVPet *visual){
-    unsigned mode=pet->mode,clip=visual->last_clip,cycle=0;
-    if(clip<sp_slime_asset.clip_count){const SPClip *c=&sp_slime_asset.clips[clip];if(c->frame_count)cycle=(unsigned)(visual->animation_time*c->sample_rate)/c->frame_count;}
+    unsigned mode=pet->mode,clip=visual->last_clip,cycle=visual->animation_cycle;
     if(!sp_sound_states[i].active)sp_sound_emit(SP_AUDIO_SPAWN,pet);
     else if(sp_sound_states[i].mode!=mode){
         if(sp_sound_states[i].mode==SP_SLEEP)sp_sound_emit(SP_AUDIO_WAKE,pet);

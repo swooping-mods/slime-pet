@@ -5,13 +5,16 @@
 #include "shop_control.h"
 #include "glyphs.h"
 #include "animation_control.h"
+#include "../../runtime/sdk/pet_motion.h"
 typedef struct {SURoot go,transform,mesh,vertices,normals;} SVBody;
 typedef struct {SVBody body;char previous[65];float size;} SVLabel;
 static SGText sv_glyphs;
 static SPVec3 sv_next_positions[SP_JELLY_VERTICES],sv_next_normals[SP_JELLY_VERTICES];
 typedef struct {
     SURoot root,transform,cradle;SVLabel zzz;
-    SVBody body;unsigned variant,last_frame,last_clip,animation_mode;float clock,animation_time;int made;
+    SVBody body;unsigned variant,last_frame,last_clip,animation_mode,animation_cycle;float clock,animation_time;int made;
+    MoonPetMotion motion;MoonPetHop hop;
+    unsigned motion_held,motion_kind,motion_reset_reason,motion_reset_pending;
 } SVPet;
 typedef struct {
     SURoot root,transform,pieces[16],button,button_transform,focus;SVLabel label,buy_label;SVBody bodies[16];
@@ -137,20 +140,21 @@ static inline int sv_pet_make(SVPet *p,PTR parent,unsigned variant,float scale){
 }
 static inline void sv_pet_pose(SVPet *p,unsigned mode,unsigned blink,unsigned emotion,float dt){
     (void)blink;(void)emotion; /* Expressions belong to the imported eye morphs. */
-    if(!p->made)return;p->clock+=dt;
-    unsigned wanted=mode;
-    if(p->animation_mode==SP_FOLLOW&&mode!=SP_FOLLOW&&mode!=SP_HELD){
-        const SPClip *jump=&sp_slime_asset.clips[spa_clip(&sp_slime_asset,SP_FOLLOW)];
-        float duration=(float)jump->frame_count/jump->sample_rate;
-        float phase=p->animation_time-(float)(unsigned)(p->animation_time/duration)*duration;
-        if(phase+dt*1.35f<duration)wanted=SP_FOLLOW;
-    }
-    if(p->animation_mode!=wanted){p->animation_mode=wanted;p->animation_time=0;}
-    else p->animation_time+=dt*(wanted==SP_FOLLOW?1.35f:1.f);
+    if(!p->made)return;p->clock+=dt;if(p->clock>=1)p->clock-=1;
+    const SPClip *jump=&sp_slime_asset.clips[spa_clip(&sp_slime_asset,SP_FOLLOW)];
+    float duration=(float)jump->frame_count/jump->sample_rate;
+    if(!moon_pet_hop_step(&p->hop,mode==SP_FOLLOW,mode==SP_HELD,dt,duration,1.35f))return;
+    unsigned wanted=p->hop.active?SP_FOLLOW:mode;
+    if(p->hop.active){p->animation_mode=SP_FOLLOW;p->animation_time=p->hop.time;p->animation_cycle=p->hop.cycle;}
+    else if(p->animation_mode!=wanted){p->animation_mode=wanted;p->animation_time=0;}
+    else p->animation_time+=dt;
     /* Navigation owns travel along the floor; FollowHop supplies authored airtime.
      * Correct penetration only, preserving positive foot height during a hop. */
     unsigned clip=spa_clip(&sp_slime_asset,p->animation_mode);if(clip>=sp_slime_asset.clip_count)return;
-    const SPClip *c=&sp_slime_asset.clips[clip];float sample=p->animation_time*c->sample_rate;unsigned frame=(unsigned)sample%c->frame_count;float alpha=sample-(float)(unsigned)sample;
+    const SPClip *c=&sp_slime_asset.clips[clip];
+    if(!p->hop.active){float length=(float)c->frame_count/c->sample_rate;
+        if(p->animation_time>=length)p->animation_time-=length;p->animation_cycle=0;}
+    float sample=p->animation_time*c->sample_rate;unsigned frame=(unsigned)sample%c->frame_count;float alpha=sample-(float)(unsigned)sample;
     if(sp_slime_asset.vertex_count<=SP_JELLY_VERTICES){
         PTR vertices=su_get(p->body.vertices),normals=su_get(p->body.normals);SPVec3 *vs=su.array_address(vertices,sizeof(SPVec3),0),*ns=su.array_address(normals,sizeof(SPVec3),0);
         sp_decode_frame(&sp_slime_asset,clip,frame,vs,ns);

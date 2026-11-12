@@ -16,7 +16,7 @@ static int sp_interaction_query(void *context,void *actor,MoonInteractionTarget 
     }
     int shop=sp_target_shop(walker);if(shop<0)return 0;
     MoonInteractionPoint origin,direction;if(!moon_interaction_unity_view(walker,&origin,&direction))return 0;
-    SPVec3 point=su_vector(su.tr_get_position,sw_transform(su_get(sp_shops[shop].button)));
+    SPVec3 point=su_vector(su.tr_get_position,su_transform(su_get(sp_shops[shop].button)));
     *target=(MoonInteractionTarget){sp_shops[shop].button,su_sqrt(moon_interaction_distance2(origin,moon_interaction_from_sp(point))),0,SP_INTERACT_SHOP+(unsigned)shop};return 1;
 }
 static int sp_interactions_bind(PTR domain,PTR game){

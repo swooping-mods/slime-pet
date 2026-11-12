@@ -1,15 +1,38 @@
-Small Loop Works: mod and shared adapter code.
-Moon Sweepers: DragDrop Games.
+Moon Sweepers Slime Pet 0.3.0 — third-party attribution
 
-Original jelly model, adaptations and sound effects: Small Loop Works.
+Corrected local jelly model — adopted 2026-11-10
 
-Space Station Kit 1.0 computer terminal: Kenney
+User-supplied Meshy_AI_Blush_Jelly_Bean_1108224441_texture.glb.
+Original SHA-256: f660b1f4b14f4105b21151358a0b468c39f03207b20c691a30facb0a486ccb4a
+Account/source license evidence was not supplied. Local development use only;
+no public redistribution eligibility or third-party endorsement is claimed.
+
+Prepared in the separate slime-bounce-lab: closed rebuilt shell, fitted closed
+eye lenses, procedural painted highlights, flat PBR variants and ten authored
+morph animations. Port preserves geometry, normals, winding and node scaling,
+flips UV V for Unity image coordinates, and keeps the original mod ZZZ glyphs.
+No Slime Rancher content is used. See intake.json and vendored provenance.
+
+Historical SlimeLab attribution is retained in SLIMELAB-CREDITS.txt; its mesh
+and primitive eye overlays are no longer the active pet.
+
+Space Station Kit 1.0 computer terminal
+Author: Kenney
 https://kenney.nl/assets/space-station-kit
-CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
-Modified terminal geometry, materials, specimen tube, controls and labels.
+CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+Changes: terminal assembly, palette-to-material partitions, removed zero-area
+triangles, transparent specimen tube, physical control and runtime shop labels.
+See KENNEY-LICENSE.txt for the author-supplied notice.
 
-Retained SlimeLab-derived source/data: Zero (fran-zerogame)
-https://fran-zerogame.itch.io/slimelab-full-color-3d-slime-asset-bundle
-CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
-Changes: mesh/animation conversion, coordinate normalization and materials.
-The original asset authors do not endorse this mod.
+Code Review Simulator control profiles, feedback policy and button_snap.wav
+Reused under the user's express authorization for this mod. Source revision:
+738387c643cf18f70ccfbe7b59a08c1ce2235e7e. Adapted moving actuator/receiver fit,
+Unity collision/selection proxies, timing and bounded spatial audio playback.
+No independent public license or project-wide license is inferred.
+
+The named asset authors do not endorse this mod. Moon Sweepers belongs to its
+respective rights holders; its proprietary binaries, code and game assets are
+not included in the deployment package. No Slime Rancher content is included.
+MCSTEEG Slime is rejected because its bundled license restricts redistribution.
+Preserve these attributions, source links and modification notices with copies.
